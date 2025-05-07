@@ -1,0 +1,11 @@
+mypy
+pre-commit
+pytest
+pytest-cov
+ruff
+
+# for testing SQL backends
+mysql-connector-python
+#psycopg
+#psycopg2
+#pymysql

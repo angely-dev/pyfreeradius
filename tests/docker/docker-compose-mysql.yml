@@ -1,0 +1,17 @@
+services:
+    mydb:
+        image: mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: mypass
+        volumes:
+            - ./mysql/database.sql:/docker-entrypoint-initdb.d/1.sql
+            - ./mysql/schema.sql:/docker-entrypoint-initdb.d/2.sql
+            - ./mysql/setup.sql:/docker-entrypoint-initdb.d/3.sql
+            - myvol:/var/lib/mysql
+        healthcheck:
+            test: mysqladmin ping
+            interval: 10s
+            timeout: 5s
+            retries: 5
+volumes:
+    myvol:
