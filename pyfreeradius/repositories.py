@@ -17,13 +17,21 @@ class BaseRepository(ABC):
         self.db_session = db_session
         self.rad_tables = rad_tables or RadTables()
 
+        #
+        # To avoid SQL injection attacks, DB-API 2.0 drivers use a "placeholder" to
+        # bind query parameters. This placeholder is usually "%s" but sqlite3 uses "?".
+        # We set below the correct placeholder depending on the driver.
+        # The variable is named "ph" for brevity (short for "placeholder").
+        #
+        self.ph = "?" if "sqlite" in db_session.__class__.__module__ else "%s"
+
 
 class UserRepository(BaseRepository):
     def exists(self, username: str) -> bool:
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"""SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radcheck} WHERE username = %s
-                UNION SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radreply} WHERE username = %s
-                UNION SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radusergroup} WHERE username = %s"""
+            sql = f"""SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radcheck} WHERE username = {self.ph}
+                UNION SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radreply} WHERE username = {self.ph}
+                UNION SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radusergroup} WHERE username = {self.ph}"""
             db_cursor.execute(sql, (username, username, username))
             counts = [count for (count,) in db_cursor.fetchall()]
             return sum(counts) > 0
@@ -33,15 +41,15 @@ class UserRepository(BaseRepository):
             return None
 
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radcheck} WHERE username = %s"
+            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radcheck} WHERE username = {self.ph}"
             db_cursor.execute(sql, (username,))
             checks = [AttributeOpValue(attribute=a, op=o, value=v) for a, o, v in db_cursor.fetchall()]
 
-            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radreply} WHERE username = %s"
+            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radreply} WHERE username = {self.ph}"
             db_cursor.execute(sql, (username,))
             replies = [AttributeOpValue(attribute=a, op=o, value=v) for a, o, v in db_cursor.fetchall()]
 
-            sql = f"SELECT groupname, priority FROM {self.rad_tables.radusergroup} WHERE username = %s"
+            sql = f"SELECT groupname, priority FROM {self.rad_tables.radusergroup} WHERE username = {self.ph}"
             db_cursor.execute(sql, (username,))
             groups = [UserGroup(groupname=g, priority=p) for g, p in db_cursor.fetchall()]
 
@@ -61,16 +69,16 @@ class UserRepository(BaseRepository):
         params: list[str | int] = []
 
         if username_like:
-            where_clauses.append("username LIKE %s")
+            where_clauses.append(f"username LIKE {self.ph}")
             params.append(username_like)
 
         if username_gt:
             # used for keyset pagination
-            where_clauses.append("username > %s")
+            where_clauses.append(f"username > {self.ph}")
             params.append(username_gt)
 
         if limit:
-            limit_clause = "LIMIT %s"
+            limit_clause = f"LIMIT {self.ph}"
             params.append(limit)
 
         where_clauses_as_text = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
@@ -90,15 +98,15 @@ class UserRepository(BaseRepository):
     def add(self, user: User):
         with closing(self.db_session.cursor()) as db_cursor:
             for check in user.checks:
-                sql = f"INSERT INTO {self.rad_tables.radcheck} (username, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radcheck} (username, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (user.username, check.attribute, check.op, check.value))
 
             for reply in user.replies:
-                sql = f"INSERT INTO {self.rad_tables.radreply} (username, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radreply} (username, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (user.username, reply.attribute, reply.op, reply.value))
 
             for group in user.groups:
-                sql = f"INSERT INTO {self.rad_tables.radusergroup} (username, groupname, priority) VALUES (%s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radusergroup} (username, groupname, priority) VALUES ({self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (user.username, group.groupname, group.priority))
 
     def set(
@@ -110,36 +118,36 @@ class UserRepository(BaseRepository):
     ):
         with closing(self.db_session.cursor()) as db_cursor:
             if new_checks is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radcheck} WHERE username = %s", (username,))
+                db_cursor.execute(f"DELETE FROM {self.rad_tables.radcheck} WHERE username = {self.ph}", (username,))
                 for check in new_checks:
-                    sql = f"INSERT INTO {self.rad_tables.radcheck} (username, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radcheck} (username, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (username, check.attribute, check.op, check.value))
 
             if new_replies is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radreply} WHERE username = %s", (username,))
+                db_cursor.execute(f"DELETE FROM {self.rad_tables.radreply} WHERE username = {self.ph}", (username,))
                 for reply in new_replies:
-                    sql = f"INSERT INTO {self.rad_tables.radreply} (username, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radreply} (username, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (username, reply.attribute, reply.op, reply.value))
 
             if new_groups is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE username = %s", (username,))
+                db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE username = {self.ph}", (username,))
                 for group in new_groups:
-                    sql = f"INSERT INTO {self.rad_tables.radusergroup} (username, groupname, priority) VALUES (%s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radusergroup} (username, groupname, priority) VALUES ({self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (username, group.groupname, group.priority))
 
     def remove(self, username: str):
         with closing(self.db_session.cursor()) as db_cursor:
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radcheck} WHERE username = %s", (username,))
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radreply} WHERE username = %s", (username,))
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE username = %s", (username,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radcheck} WHERE username = {self.ph}", (username,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radreply} WHERE username = {self.ph}", (username,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE username = {self.ph}", (username,))
 
 
 class GroupRepository(BaseRepository):
     def exists(self, groupname: str) -> bool:
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"""SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radgroupcheck} WHERE groupname = %s
-                UNION SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radgroupreply} WHERE groupname = %s
-                UNION SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radusergroup} WHERE groupname = %s"""
+            sql = f"""SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radgroupcheck} WHERE groupname = {self.ph}
+                UNION SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radgroupreply} WHERE groupname = {self.ph}
+                UNION SELECT COUNT(DISTINCT groupname) FROM {self.rad_tables.radusergroup} WHERE groupname = {self.ph}"""
             db_cursor.execute(sql, (groupname, groupname, groupname))
             counts = [count for (count,) in db_cursor.fetchall()]
             return sum(counts) > 0
@@ -149,15 +157,15 @@ class GroupRepository(BaseRepository):
             return None
 
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radgroupcheck} WHERE groupname = %s"
+            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radgroupcheck} WHERE groupname = {self.ph}"
             db_cursor.execute(sql, (groupname,))
             checks = [AttributeOpValue(attribute=a, op=o, value=v) for a, o, v in db_cursor.fetchall()]
 
-            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radgroupreply} WHERE groupname = %s"
+            sql = f"SELECT attribute, op, value FROM {self.rad_tables.radgroupreply} WHERE groupname = {self.ph}"
             db_cursor.execute(sql, (groupname,))
             replies = [AttributeOpValue(attribute=a, op=o, value=v) for a, o, v in db_cursor.fetchall()]
 
-            sql = f"SELECT username, priority FROM {self.rad_tables.radusergroup} WHERE groupname = %s"
+            sql = f"SELECT username, priority FROM {self.rad_tables.radusergroup} WHERE groupname = {self.ph}"
             db_cursor.execute(sql, (groupname,))
             users = [GroupUser(username=u, priority=p) for u, p in db_cursor.fetchall()]
 
@@ -177,16 +185,16 @@ class GroupRepository(BaseRepository):
         params: list[str | int] = []
 
         if groupname_like:
-            where_clauses.append("groupname LIKE %s")
+            where_clauses.append(f"groupname LIKE {self.ph}")
             params.append(groupname_like)
 
         if groupname_gt:
             # used for keyset pagination
-            where_clauses.append("groupname > %s")
+            where_clauses.append(f"groupname > {self.ph}")
             params.append(groupname_gt)
 
         if limit:
-            limit_clause = "LIMIT %s"
+            limit_clause = f"LIMIT {self.ph}"
             params.append(limit)
 
         where_clauses_as_text = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
@@ -205,7 +213,7 @@ class GroupRepository(BaseRepository):
 
     def has_users(self, groupname: str) -> bool:
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radusergroup} WHERE groupname = %s"
+            sql = f"SELECT COUNT(DISTINCT username) FROM {self.rad_tables.radusergroup} WHERE groupname = {self.ph}"
             db_cursor.execute(sql, (groupname,))
             (count,) = db_cursor.fetchone()
             return count > 0
@@ -213,15 +221,15 @@ class GroupRepository(BaseRepository):
     def add(self, group: Group):
         with closing(self.db_session.cursor()) as db_cursor:
             for check in group.checks:
-                sql = f"INSERT INTO {self.rad_tables.radgroupcheck} (groupname, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radgroupcheck} (groupname, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (group.groupname, check.attribute, check.op, check.value))
 
             for reply in group.replies:
-                sql = f"INSERT INTO {self.rad_tables.radgroupreply} (groupname, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radgroupreply} (groupname, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (group.groupname, reply.attribute, reply.op, reply.value))
 
             for user in group.users:
-                sql = f"INSERT INTO {self.rad_tables.radusergroup} (groupname, username, priority) VALUES (%s, %s, %s)"
+                sql = f"INSERT INTO {self.rad_tables.radusergroup} (groupname, username, priority) VALUES ({self.ph}, {self.ph}, {self.ph})"
                 db_cursor.execute(sql, (group.groupname, user.username, user.priority))
 
     def set(
@@ -233,34 +241,40 @@ class GroupRepository(BaseRepository):
     ):
         with closing(self.db_session.cursor()) as db_cursor:
             if new_checks is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupcheck} WHERE groupname = %s", (groupname,))
+                db_cursor.execute(
+                    f"DELETE FROM {self.rad_tables.radgroupcheck} WHERE groupname = {self.ph}", (groupname,)
+                )
                 for check in new_checks:
-                    sql = f"INSERT INTO {self.rad_tables.radgroupcheck} (groupname, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radgroupcheck} (groupname, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (groupname, check.attribute, check.op, check.value))
 
             if new_replies is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupreply} WHERE groupname = %s", (groupname,))
+                db_cursor.execute(
+                    f"DELETE FROM {self.rad_tables.radgroupreply} WHERE groupname = {self.ph}", (groupname,)
+                )
                 for reply in new_replies:
-                    sql = f"INSERT INTO {self.rad_tables.radgroupreply} (groupname, attribute, op, value) VALUES (%s, %s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radgroupreply} (groupname, attribute, op, value) VALUES ({self.ph}, {self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (groupname, reply.attribute, reply.op, reply.value))
 
             if new_users is not None:
-                db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE groupname = %s", (groupname,))
+                db_cursor.execute(
+                    f"DELETE FROM {self.rad_tables.radusergroup} WHERE groupname = {self.ph}", (groupname,)
+                )
                 for user in new_users:
-                    sql = f"INSERT INTO {self.rad_tables.radusergroup} (groupname, username, priority) VALUES (%s, %s, %s)"
+                    sql = f"INSERT INTO {self.rad_tables.radusergroup} (groupname, username, priority) VALUES ({self.ph}, {self.ph}, {self.ph})"
                     db_cursor.execute(sql, (groupname, user.username, user.priority))
 
     def remove(self, groupname: str):
         with closing(self.db_session.cursor()) as db_cursor:
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupcheck} WHERE groupname = %s", (groupname,))
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupreply} WHERE groupname = %s", (groupname,))
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE groupname = %s", (groupname,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupcheck} WHERE groupname = {self.ph}", (groupname,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radgroupreply} WHERE groupname = {self.ph}", (groupname,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.radusergroup} WHERE groupname = {self.ph}", (groupname,))
 
 
 class NasRepository(BaseRepository):
     def exists(self, nasname: str) -> bool:
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"SELECT COUNT(DISTINCT nasname) FROM {self.rad_tables.nas} WHERE nasname = %s"
+            sql = f"SELECT COUNT(DISTINCT nasname) FROM {self.rad_tables.nas} WHERE nasname = {self.ph}"
             db_cursor.execute(sql, (nasname,))
             (count,) = db_cursor.fetchone()
             return count > 0
@@ -270,7 +284,7 @@ class NasRepository(BaseRepository):
             return None
 
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"SELECT nasname, shortname, secret FROM {self.rad_tables.nas} WHERE nasname = %s"
+            sql = f"SELECT nasname, shortname, secret FROM {self.rad_tables.nas} WHERE nasname = {self.ph}"
             db_cursor.execute(sql, (nasname,))
             n, sh, se = db_cursor.fetchone()
             return Nas(nasname=n, shortname=sh, secret=se)
@@ -289,16 +303,16 @@ class NasRepository(BaseRepository):
         params: list[str | int] = []
 
         if nasname_like:
-            where_clauses.append("nasname LIKE %s")
+            where_clauses.append(f"nasname LIKE {self.ph}")
             params.append(nasname_like)
 
         if nasname_gt:
             # used for keyset pagination
-            where_clauses.append("nasname > %s")
+            where_clauses.append(f"nasname > {self.ph}")
             params.append(nasname_gt)
 
         if limit:
-            limit_clause = "LIMIT %s"
+            limit_clause = f"LIMIT {self.ph}"
             params.append(limit)
 
         where_clauses_as_text = f"WHERE {' AND '.join(where_clauses)}" if where_clauses else ""
@@ -314,19 +328,19 @@ class NasRepository(BaseRepository):
 
     def add(self, nas: Nas):
         with closing(self.db_session.cursor()) as db_cursor:
-            sql = f"INSERT INTO {self.rad_tables.nas} (nasname, shortname, secret) VALUES (%s, %s, %s)"
+            sql = f"INSERT INTO {self.rad_tables.nas} (nasname, shortname, secret) VALUES ({self.ph}, {self.ph}, {self.ph})"
             db_cursor.execute(sql, (nas.nasname, nas.shortname, nas.secret))
 
     def set(self, nasname: str, new_shortname: str | None = None, new_secret: str | None = None):
         with closing(self.db_session.cursor()) as db_cursor:
             if new_shortname is not None:
-                sql = f"UPDATE {self.rad_tables.nas} SET shortname = %s WHERE nasname = %s"
+                sql = f"UPDATE {self.rad_tables.nas} SET shortname = {self.ph} WHERE nasname = {self.ph}"
                 db_cursor.execute(sql, (new_shortname, nasname))
 
             if new_secret is not None:
-                sql = f"UPDATE {self.rad_tables.nas} SET secret = %s WHERE nasname = %s"
+                sql = f"UPDATE {self.rad_tables.nas} SET secret = {self.ph} WHERE nasname = {self.ph}"
                 db_cursor.execute(sql, (new_secret, nasname))
 
     def remove(self, nasname: str):
         with closing(self.db_session.cursor()) as db_cursor:
-            db_cursor.execute(f"DELETE FROM {self.rad_tables.nas} WHERE nasname = %s", (nasname,))
+            db_cursor.execute(f"DELETE FROM {self.rad_tables.nas} WHERE nasname = {self.ph}", (nasname,))
