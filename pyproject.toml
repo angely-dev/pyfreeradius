@@ -14,7 +14,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyfreeradius"
-version = "1.2.0"
+version = "1.3.0"
 authors = [
     { name="angely-dev", email="contact@brindereseau.fr" },
 ]
