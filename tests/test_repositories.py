@@ -134,13 +134,13 @@ def test_valid_user(repositories):
     assert len(repositories.user.find(limit=None)) == 200  # all results
 
     assert repositories.user.find(username_like="usr5%") == [users[5]] + users[50:60]  # usr5, usr50-59
-    assert repositories.user.find(from_username="usr9") == [users[9]] + users[90:100]  # usr9, usr90-99
-    assert repositories.user.find(username_like="usr5%", from_username="usr55") == users[55:60]  # usr55-59
+    assert repositories.user.find(username_gt="usr9") == users[90:100]  # usr90-99
+    assert repositories.user.find(username_like="usr5%", username_gt="usr55") == users[56:60]  # usr56-59
 
     assert repositories.user.find(limit=5, username_like="usr5%") == [users[5]] + users[50:54]  # usr5, u50-53
-    assert repositories.user.find(limit=5, from_username="usr9") == [users[9]] + users[90:94]  # usr9, u90-93
+    assert repositories.user.find(limit=5, username_gt="usr9") == users[90:95]  # u90-94
 
-    assert repositories.user.find(limit=5, from_username="usr55", username_like="usr5%") == users[55:60]  # usr55-59
+    assert repositories.user.find(limit=5, username_gt="usr55", username_like="usr5%") == users[56:60]  # usr56-59
 
     for user in users:
         repositories.user.remove(user.username)
@@ -178,13 +178,13 @@ def test_valid_group(repositories):
     assert len(repositories.group.find(limit=None)) == 200  # all results
 
     assert repositories.group.find(groupname_like="grp5%") == [groups[5]] + groups[50:60]  # grp5, grp50-59
-    assert repositories.group.find(from_groupname="grp9") == [groups[9]] + groups[90:100]  # grp9, grp90-99
-    assert repositories.group.find(groupname_like="grp5%", from_groupname="grp55") == groups[55:60]  # grp55-59
+    assert repositories.group.find(groupname_gt="grp9") == groups[90:100]  # grp90-99
+    assert repositories.group.find(groupname_like="grp5%", groupname_gt="grp55") == groups[56:60]  # grp56-59
 
     assert repositories.group.find(limit=5, groupname_like="grp5%") == [groups[5]] + groups[50:54]  # grp5, grp50-53
-    assert repositories.group.find(limit=5, from_groupname="grp9") == [groups[9]] + groups[90:94]  # grp9, grp90-93
+    assert repositories.group.find(limit=5, groupname_gt="grp9") == groups[90:95]  # grp90-94
 
-    assert repositories.group.find(limit=5, from_groupname="grp55", groupname_like="grp5%") == groups[55:60]  # grp-59
+    assert repositories.group.find(limit=5, groupname_gt="grp55", groupname_like="grp5%") == groups[56:60]  # grp56-59
 
     for group in groups:
         repositories.group.remove(group.groupname)
@@ -222,13 +222,13 @@ def test_valid_nas(repositories):
     assert len(repositories.nas.find(limit=None)) == 200  # all results
 
     assert repositories.nas.find(nasname_like="nas5%") == [nases[5]] + nases[50:60]  # nas5, nas50-59
-    assert repositories.nas.find(from_nasname="nas9") == [nases[9]] + nases[90:100]  # nas9, nas90-99
-    assert repositories.nas.find(nasname_like="nas5%", from_nasname="nas55") == nases[55:60]  # nas55-59
+    assert repositories.nas.find(nasname_gt="nas9") == nases[90:100]  # nas90-99
+    assert repositories.nas.find(nasname_like="nas5%", nasname_gt="nas55") == nases[56:60]  # nas56-59
 
     assert repositories.nas.find(limit=5, nasname_like="nas5%") == [nases[5]] + nases[50:54]  # nas5, nas50-53
-    assert repositories.nas.find(limit=5, from_nasname="nas9") == [nases[9]] + nases[90:94]  # nas9, nas90-93
+    assert repositories.nas.find(limit=5, nasname_gt="nas9") == nases[90:95]  # nas90-94
 
-    assert repositories.nas.find(limit=5, from_nasname="nas55", nasname_like="nas5%") == nases[55:60]  # nas-59
+    assert repositories.nas.find(limit=5, nasname_gt="nas55", nasname_like="nas5%") == nases[56:60]  # nas56-59
 
     for nas in nases:
         repositories.nas.remove(nas.nasname)

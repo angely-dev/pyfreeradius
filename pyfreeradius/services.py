@@ -20,14 +20,14 @@ class UserService:
         return self.user_repo.find_one(username)
 
     def find(
-        self, limit: int | None = 100, username_like: str | None = None, from_username: str | None = None
+        self, limit: int | None = 100, username_like: str | None = None, username_gt: str | None = None
     ) -> list[User]:
-        return self.user_repo.find(limit=limit, username_like=username_like, from_username=from_username)
+        return self.user_repo.find(limit=limit, username_like=username_like, username_gt=username_gt)
 
     def find_usernames(
-        self, limit: int | None = 100, username_like: str | None = None, from_username: str | None = None
+        self, limit: int | None = 100, username_like: str | None = None, username_gt: str | None = None
     ) -> list[str]:
-        return self.user_repo.find_usernames(limit=limit, username_like=username_like, from_username=from_username)
+        return self.user_repo.find_usernames(limit=limit, username_like=username_like, username_gt=username_gt)
 
     def get(self, username: str) -> User:
         user = self.user_repo.find_one(username)
@@ -122,16 +122,14 @@ class GroupService:
         return self.group_repo.find_one(groupname)
 
     def find(
-        self, limit: int | None = 100, groupname_like: str | None = None, from_groupname: str | None = None
+        self, limit: int | None = 100, groupname_like: str | None = None, groupname_gt: str | None = None
     ) -> list[Group]:
-        return self.group_repo.find(limit=limit, groupname_like=groupname_like, from_groupname=from_groupname)
+        return self.group_repo.find(limit=limit, groupname_like=groupname_like, groupname_gt=groupname_gt)
 
     def find_groupnames(
-        self, limit: int | None = 100, groupname_like: str | None = None, from_groupname: str | None = None
+        self, limit: int | None = 100, groupname_like: str | None = None, groupname_gt: str | None = None
     ) -> list[str]:
-        return self.group_repo.find_groupnames(
-            limit=limit, groupname_like=groupname_like, from_groupname=from_groupname
-        )
+        return self.group_repo.find_groupnames(limit=limit, groupname_like=groupname_like, groupname_gt=groupname_gt)
 
     def get(self, groupname: str) -> Group:
         group = self.group_repo.find_one(groupname)
@@ -230,14 +228,14 @@ class NasService:
         return self.nas_repo.find_one(nasname)
 
     def find(
-        self, limit: int | None = 100, nasname_like: str | None = None, from_nasname: str | None = None
+        self, limit: int | None = 100, nasname_like: str | None = None, nasname_gt: str | None = None
     ) -> list[Nas]:
-        return self.nas_repo.find(limit=limit, nasname_like=nasname_like, from_nasname=from_nasname)
+        return self.nas_repo.find(limit=limit, nasname_like=nasname_like, nasname_gt=nasname_gt)
 
     def find_nasnames(
-        self, limit: int | None = 100, nasname_like: str | None = None, from_nasname: str | None = None
+        self, limit: int | None = 100, nasname_like: str | None = None, nasname_gt: str | None = None
     ) -> list[str]:
-        return self.nas_repo.find_nasnames(limit=limit, nasname_like=nasname_like, from_nasname=from_nasname)
+        return self.nas_repo.find_nasnames(limit=limit, nasname_like=nasname_like, nasname_gt=nasname_gt)
 
     def get(self, nasname: str) -> Nas:
         nas = self.nas_repo.find_one(nasname)

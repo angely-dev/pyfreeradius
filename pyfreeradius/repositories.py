@@ -48,13 +48,13 @@ class UserRepository(BaseRepository):
             return User(username=username, checks=checks, replies=replies, groups=groups)
 
     def find(
-        self, limit: int | None = 100, username_like: str | None = None, from_username: str | None = None
+        self, limit: int | None = 100, username_like: str | None = None, username_gt: str | None = None
     ) -> list[User]:
-        usernames = self.find_usernames(limit=limit, username_like=username_like, from_username=from_username)
+        usernames = self.find_usernames(limit=limit, username_like=username_like, username_gt=username_gt)
         return [self.find_one(username) for username in usernames]  # type: ignore
 
     def find_usernames(
-        self, limit: int | None = 100, username_like: str | None = None, from_username: str | None = None
+        self, limit: int | None = 100, username_like: str | None = None, username_gt: str | None = None
     ) -> list[str]:
         where_clauses = []
         limit_clause = ""
@@ -64,9 +64,10 @@ class UserRepository(BaseRepository):
             where_clauses.append("username LIKE %s")
             params.append(username_like)
 
-        if from_username:
-            where_clauses.append("username >= %s")
-            params.append(from_username)
+        if username_gt:
+            # used for keyset pagination
+            where_clauses.append("username > %s")
+            params.append(username_gt)
 
         if limit:
             limit_clause = "LIMIT %s"
@@ -163,13 +164,13 @@ class GroupRepository(BaseRepository):
             return Group(groupname=groupname, checks=checks, replies=replies, users=users)
 
     def find(
-        self, limit: int | None = 100, groupname_like: str | None = None, from_groupname: str | None = None
+        self, limit: int | None = 100, groupname_like: str | None = None, groupname_gt: str | None = None
     ) -> list[Group]:
-        groupnames = self.find_groupnames(limit=limit, groupname_like=groupname_like, from_groupname=from_groupname)
+        groupnames = self.find_groupnames(limit=limit, groupname_like=groupname_like, groupname_gt=groupname_gt)
         return [self.find_one(groupname) for groupname in groupnames]  # type: ignore
 
     def find_groupnames(
-        self, limit: int | None = 100, groupname_like: str | None = None, from_groupname: str | None = None
+        self, limit: int | None = 100, groupname_like: str | None = None, groupname_gt: str | None = None
     ) -> list[str]:
         where_clauses = []
         limit_clause = ""
@@ -179,9 +180,10 @@ class GroupRepository(BaseRepository):
             where_clauses.append("groupname LIKE %s")
             params.append(groupname_like)
 
-        if from_groupname:
-            where_clauses.append("groupname >= %s")
-            params.append(from_groupname)
+        if groupname_gt:
+            # used for keyset pagination
+            where_clauses.append("groupname > %s")
+            params.append(groupname_gt)
 
         if limit:
             limit_clause = "LIMIT %s"
@@ -274,13 +276,13 @@ class NasRepository(BaseRepository):
             return Nas(nasname=n, shortname=sh, secret=se)
 
     def find(
-        self, limit: int | None = 100, nasname_like: str | None = None, from_nasname: str | None = None
+        self, limit: int | None = 100, nasname_like: str | None = None, nasname_gt: str | None = None
     ) -> list[Nas]:
-        nasnames = self.find_nasnames(limit=limit, nasname_like=nasname_like, from_nasname=from_nasname)
+        nasnames = self.find_nasnames(limit=limit, nasname_like=nasname_like, nasname_gt=nasname_gt)
         return [self.find_one(nasname) for nasname in nasnames]  # type: ignore
 
     def find_nasnames(
-        self, limit: int | None = 100, nasname_like: str | None = None, from_nasname: str | None = None
+        self, limit: int | None = 100, nasname_like: str | None = None, nasname_gt: str | None = None
     ) -> list[str]:
         where_clauses = []
         limit_clause = ""
@@ -290,9 +292,10 @@ class NasRepository(BaseRepository):
             where_clauses.append("nasname LIKE %s")
             params.append(nasname_like)
 
-        if from_nasname:
-            where_clauses.append("nasname >= %s")
-            params.append(from_nasname)
+        if nasname_gt:
+            # used for keyset pagination
+            where_clauses.append("nasname > %s")
+            params.append(nasname_gt)
 
         if limit:
             limit_clause = "LIMIT %s"
