@@ -67,8 +67,6 @@ pip install pyfreeradius
 pip install mysql-connector-python
 ```
 
-## Database
-
 An instance of the FreeRADIUS server is NOT needed for testing, the focus being on the database schema.
 
 Either you use an existing database or (preferably) a Docker container for testing the package:
