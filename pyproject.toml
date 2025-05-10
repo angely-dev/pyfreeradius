@@ -1,0 +1,37 @@
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff]
+line-length = 120
+src = ["pyfreeradius/"]
+
+[tool.pytest.ini_options]
+pythonpath = "./"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pyfreeradius"
+version = "1.4.0"
+authors = [
+    { name="angely-dev", email="contact@brindereseau.fr" },
+]
+description = "A Python API on top of the FreeRADIUS database schema"
+readme = "README.md"
+dependencies = ["pydantic"]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: System :: Networking"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/angely-dev/pyfreeradius"
+"Bug Tracker" = "https://github.com/angely-dev/pyfreeradius/issues"

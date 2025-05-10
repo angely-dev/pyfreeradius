@@ -1,0 +1,17 @@
+services:
+    mydb:
+        image: mariadb
+        environment:
+            MARIADB_ROOT_PASSWORD: mypass
+        volumes:
+            - ./mysql/database.sql:/docker-entrypoint-initdb.d/1.sql
+            - ./mysql/schema.sql:/docker-entrypoint-initdb.d/2.sql
+            - ./mysql/setup.sql:/docker-entrypoint-initdb.d/3.sql
+            - myvol:/var/lib/mysql
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+volumes:
+    myvol:
