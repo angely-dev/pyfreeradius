@@ -1,3 +1,7 @@
+[![python](https://img.shields.io/badge/python-3.10+-success.svg)](https://devguide.python.org/versions)
+[![pypi](https://img.shields.io/badge/pypi-published-success.svg)](https://pypi.org/project/pyfreeradius)
+[![license](https://img.shields.io/badge/license-MIT-success.svg)](https://opensource.org/licenses/MIT)
+
 - [What is this package?](#what-is-this-package)
 - [Quick start](#quick-start)
 - [HOWTO](#howto)
