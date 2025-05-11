@@ -77,12 +77,12 @@ unzip main.zip
 cd pyfreeradius-main/tests/docker
 #
 docker compose -f docker-compose-mysql.yml up -d --wait
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-mydb-1
-# 172.18.0.2
-sudo echo "172.18.0.2 mydb" | sudo tee -a /etc/hosts
-ping mydb
+echo "$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' docker-mydb-1) mydb" | sudo tee -a /etc/hosts
+ping -c 3 mydb 
 # PING mydb (172.18.0.2) 56(84) bytes of data.
-# 64 bytes from mydb (172.18.0.2): icmp_seq=1 ttl=64 time=0.234 ms
+# 64 bytes from mydb (172.18.0.2): icmp_seq=1 ttl=64 time=0.079 ms
+# 64 bytes from mydb (172.18.0.2): icmp_seq=2 ttl=64 time=0.148 ms
+# 64 bytes from mydb (172.18.0.2): icmp_seq=3 ttl=64 time=0.130 ms
 ```
 
 ## Example #1
